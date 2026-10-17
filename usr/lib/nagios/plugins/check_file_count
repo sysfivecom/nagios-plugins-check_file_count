@@ -22,6 +22,7 @@ FARGS="-maxdepth 1"
 OUTPUT=""
 RESULT="OK"
 PERFDATA=0
+REVERSE=0
 
 # Threshoulds
 WARN=""
@@ -43,6 +44,7 @@ cat << EOF
         -r | --recursive  Search files recursive in all subfolders.
         -i | --ignore-ne  Ignore if destination path does not exist.
         -h | --help       This help.
+        -e | --reverse    Warn if less rather than more files are present.
 
 EOF
 }
@@ -59,18 +61,31 @@ get_standard_output(){
 
 set_thresholds(){
   if [ "$WARN" != "" ]; then
-
-      if [ $FILECOUNT -ge $WARN ]; then
-          RESULT="WARNING"
-          STATE=$STATE_WARNING
-      fi
+	if [ $REVERSE -eq 0 ]; then 
+	      if [ $FILECOUNT -ge $WARN ]; then
+		  RESULT="WARNING"
+		  STATE=$STATE_WARNING
+	      fi
+	else	      
+		if [ $FILECOUNT -le $WARN ]; then
+		  RESULT="WARNING"
+		  STATE=$STATE_WARNING
+	      fi
+	fi
   fi
 
   if [ "$CRIT" != "" ]; then
-      if [ $FILECOUNT -ge $CRIT ]; then
-          RESULT="CRITICAL"
-          STATE=$STATE_CRITICAL
-      fi
+	if [ $REVERSE -eq 0 ]; then 
+		if [ $FILECOUNT -ge $CRIT ]; then
+			RESULT="CRITICAL"
+			STATE=$STATE_CRITICAL
+		fi
+	else
+		if [ $FILECOUNT -le $CRIT ]; then
+			RESULT="CRITICAL"
+			STATE=$STATE_CRITICAL
+		fi
+	fi
   fi
 }
 
@@ -131,6 +146,10 @@ while  [ $# -gt 0 ]; do
         ;;
         -i|--ignore-ne)
           IGNORE_NE=1
+          shift
+        ;;        
+        -e|--reverse)
+          REVERSE=1
           shift
         ;;
         *)
